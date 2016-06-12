@@ -57,6 +57,7 @@ class Curl {
 			curl_setopt($ch, CURLOPT_URL, 'http://www.zhihu.com/people/' . $user_list[$i] . '/about');
 			curl_setopt($ch, CURLOPT_COOKIE, self::$user_cookie);
 			curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.130 Safari/537.36');
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
 			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 			$requestMap[$i] = $ch;
@@ -85,6 +86,7 @@ class Curl {
 					curl_setopt($ch, CURLOPT_URL, 'http://www.zhihu.com/people/' . $user_list[$i] . '/about');
 					curl_setopt($ch, CURLOPT_COOKIE, self::$user_cookie);
 					curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.130 Safari/537.36');
+					curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
 					curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 					$requestMap[$i] = $ch;
