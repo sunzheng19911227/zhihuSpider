@@ -167,8 +167,9 @@ function getOnePageUserList($result, $u_id, $user_type = 'followees', $count, $u
 {
 	$follow_user_list = array();
 	$user_list = array();
-	preg_match_all('#<h2 class="zm-list-content-title"><a data-tip=".*?" href="https://www.zhihu.com/people/(.*?)" class="zg-link" title="(.*?)">#', $result, $out);
-
+	//preg_match_all('#<h2 class="zm-list-content-title"><a data-tip=".*?" href="https://www.zhihu.com/people/(.*?)" class="zg-link" title="(.*?)">#', $result, $out);
+	preg_match_all('/<a\s*.*href\s*=\"https:\/\/www.zhihu.com\/[a-zA-Z]+\/(.*?)\"/',$result,$out);
+	
 	$user_list = Curl::getMultiUser($out[1]);
 	for ($i = 0; $i < $count; $i++)
 	{
