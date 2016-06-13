@@ -19,7 +19,7 @@ $redis = PRedis::getInstance();
 $redis->flushdb();
 if ($redis->llen('request_queue') == 0)
 {
-	$redis->lpush('request_queue', 'hector-hu');
+	$redis->lpush('request_queue', 'sun-zheng-46-81');
 }
 //最大进程数
 $max_connect = 2;
