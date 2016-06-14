@@ -292,11 +292,11 @@ function getUserList($u_id, $user_type = 'followees', $count, $op_type)
 		// 		echo "--------add " . count($tmp_following_users) . " {$u_id}'s $user_type user done--------\n";
 		// 	}
 		// 	echo "--------request more $count user done with u_id $u_id--------\n";
-		}
-		else
-		{
-			return array();
-		}
+		//}
+		//else
+		//{
+		//	return array();
+		//}
 	}
 
 	return $following_users;
