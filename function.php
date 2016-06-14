@@ -126,7 +126,8 @@ function dealUserInfo($user_list, $u_id, $user_type = 'followees', $u_name)
 	}
 	foreach ($user_list as $user)
 	{
-		preg_match('#<h2 class="zm-list-content-title"><a data-tip=".*?" href="https://www.zhihu.com/people/(.*?)" class="zg-link" title="(.*?)">#', $user, $out);
+		//preg_match('#<h2 class="zm-list-content-title"><a data-tip=".*?" href="https://www.zhihu.com/people/(.*?)" class="zg-link" title="(.*?)">#', $user, $out);
+		preg_match_all('/<a\s*.*href\s*=\"https:\/\/www.zhihu.com\/[a-zA-Z]+\/(.*?)\"/',$user,$out);
 		$params = array(
 			'where' => array(
 				'u_id' => $out[1]
@@ -170,6 +171,10 @@ function getOnePageUserList($result, $u_id, $user_type = 'followees', $count, $u
 	//preg_match_all('#<h2 class="zm-list-content-title"><a data-tip=".*?" href="https://www.zhihu.com/people/(.*?)" class="zg-link" title="(.*?)">#', $result, $out);
 	preg_match_all('/<a\s*.*href\s*=\"https:\/\/www.zhihu.com\/[a-zA-Z]+\/(.*?)\"/',$result,$out);
 	
+	if($count > 20) {
+		$count = 20;
+	}
+
 	$user_list = Curl::getMultiUser($out[1]);
 	for ($i = 0; $i < $count; $i++)
 	{
@@ -216,74 +221,77 @@ function getUserList($u_id, $user_type = 'followees', $count, $op_type)
 	}
 	else
 	{
-		preg_match('#<input type="hidden" name="_xsrf" value="(.*?)"/>#', $result, $out);
-    	$_xsrf = empty($out[1]) ? '' : trim($out[1]);
-    	preg_match('#<div class="zh-general-list clearfix" data-init="(.*?)">#', $result, $out);
-    	$url_params = empty($out[1]) ? '' : json_decode(html_entity_decode($out[1]), true);
+		//  截取前二十
+		$u_name = array_slice($u_name,0,20);
+		$following_users = getOnePageUserList($result, $u_id, $user_type, $count, $u_name, $op_type);
+		// preg_match('#<input type="hidden" name="_xsrf" value="(.*?)"/>#', $result, $out);
+  //   	$_xsrf = empty($out[1]) ? '' : trim($out[1]);
+  //   	preg_match('#<div class="zh-general-list clearfix" data-init="(.*?)">#', $result, $out);
+  //   	$url_params = empty($out[1]) ? '' : json_decode(html_entity_decode($out[1]), true);
 
-    	echo "--------start requesting $u_id more $count user--------\n";
-    	if (!empty($_xsrf) && !empty($url_params) && is_array($url_params))
-    	{
-			$params = $url_params['params'];
-			$total_page = ceil($count/20);
-			for ($page = 1; $page <= $total_page; ++$page)
-			{
-				$params['offset'] = ($page - 1 ) * 20;
-				$post_fields = array(
-					'method' => 'next',
-					'params' =>  json_encode($params),
-					'_xsrf' => $_xsrf
-				);
-				$more_user = Curl::request('POST', 'https://www.zhihu.com/node/' . $url_params['nodename'], $post_fields);
-				$more_user_result = json_decode($more_user, true);
-				if (empty($more_user_result['msg']) || !is_array($more_user_result['msg']))
-				{
-					echo "--------get $u_id $user_type page $page failed--------\n";
-					continue;
-				}
-				$more_user_tmp_list = $more_user_result['msg'];
-				$result = dealUserInfo($more_user_tmp_list, $u_id, $user_type, $u_name);
-				if (empty($result))
-				{
-					echo "--------empty more user {$url_params['nodename']} with u_id  $u_id--------\n";
-					continue;
-				}
-				$more_user_list = array_merge($more_user_list, $result[0]);
-				$tmp_following_users = array_merge($tmp_following_users, $result[1]);
-				//每获取到200条插入一次
-				if ($page%10 == 0)
-				{
-					if (!empty($more_user_list))
-					{
-						$tmp_count = count($more_user_list);
-						echo "--------start adding more new $tmp_count user with u_id  $u_id--------\n";
-						User::addMulti($more_user_list);
-						echo "--------add more new {$tmp_count} user done with u_id $u_id--------\n";
-					}
-					if (!empty($tmp_following_users) && ($op_type == 2))
-					{
-						echo "--------start adding " . count($tmp_following_users) . " $user_type user  with u_id $u_id--------\n";
-						User::addFollowList($tmp_following_users);
-						echo "--------add " . count($tmp_following_users) . " $user_type user done  with u_id $u_id--------\n";
-					}
-					$more_user_list = array();
-					$tmp_following_users = array();
-				}
-				$following_users = array_merge($following_users, $result[1]);
-			}
-			if (!empty($more_user_list))
-			{
-				echo "--------start adding rest " . count($more_user_list) . " user with u_id $u_id--------\n";
-				$last_id = User::addMulti($more_user_list);
-				echo "--------add rest" . count($more_user_list) . " user done with u_id $u_id and last_id $last_id--------\n";
-			}
-			if (!empty($tmp_following_users) && ($op_type == 2))
-			{
-				echo "--------start adding rest " . count($tmp_following_users) . " {$u_id}'s $user_type user--------\n";
-				User::addFollowList($tmp_following_users);
-				echo "--------add " . count($tmp_following_users) . " {$u_id}'s $user_type user done--------\n";
-			}
-			echo "--------request more $count user done with u_id $u_id--------\n";
+  //   	echo "--------start requesting $u_id more $count user--------\n";
+  //   	if (!empty($_xsrf) && !empty($url_params) && is_array($url_params))
+  //   	{
+		// 	$params = $url_params['params'];
+		// 	$total_page = ceil($count/20);
+		// 	for ($page = 1; $page <= $total_page; ++$page)
+		// 	{
+		// 		$params['offset'] = ($page - 1 ) * 20;
+		// 		$post_fields = array(
+		// 			'method' => 'next',
+		// 			'params' =>  json_encode($params),
+		// 			'_xsrf' => $_xsrf
+		// 		);
+		// 		$more_user = Curl::request('POST', 'https://www.zhihu.com/node/' . $url_params['nodename'], $post_fields);
+		// 		$more_user_result = json_decode($more_user, true);
+		// 		if (empty($more_user_result['msg']) || !is_array($more_user_result['msg']))
+		// 		{
+		// 			echo "--------get $u_id $user_type page $page failed--------\n";
+		// 			continue;
+		// 		}
+		// 		$more_user_tmp_list = $more_user_result['msg'];
+		// 		$result = dealUserInfo($more_user_tmp_list, $u_id, $user_type, $u_name);
+		// 		if (empty($result))
+		// 		{
+		// 			echo "--------empty more user {$url_params['nodename']} with u_id  $u_id--------\n";
+		// 			continue;
+		// 		}
+		// 		$more_user_list = array_merge($more_user_list, $result[0]);
+		// 		$tmp_following_users = array_merge($tmp_following_users, $result[1]);
+		// 		//每获取到200条插入一次
+		// 		if ($page%10 == 0)
+		// 		{
+		// 			if (!empty($more_user_list))
+		// 			{
+		// 				$tmp_count = count($more_user_list);
+		// 				echo "--------start adding more new $tmp_count user with u_id  $u_id--------\n";
+		// 				User::addMulti($more_user_list);
+		// 				echo "--------add more new {$tmp_count} user done with u_id $u_id--------\n";
+		// 			}
+		// 			if (!empty($tmp_following_users) && ($op_type == 2))
+		// 			{
+		// 				echo "--------start adding " . count($tmp_following_users) . " $user_type user  with u_id $u_id--------\n";
+		// 				User::addFollowList($tmp_following_users);
+		// 				echo "--------add " . count($tmp_following_users) . " $user_type user done  with u_id $u_id--------\n";
+		// 			}
+		// 			$more_user_list = array();
+		// 			$tmp_following_users = array();
+		// 		}
+		// 		$following_users = array_merge($following_users, $result[1]);
+		// 	}
+		// 	if (!empty($more_user_list))
+		// 	{
+		// 		echo "--------start adding rest " . count($more_user_list) . " user with u_id $u_id--------\n";
+		// 		$last_id = User::addMulti($more_user_list);
+		// 		echo "--------add rest" . count($more_user_list) . " user done with u_id $u_id and last_id $last_id--------\n";
+		// 	}
+		// 	if (!empty($tmp_following_users) && ($op_type == 2))
+		// 	{
+		// 		echo "--------start adding rest " . count($tmp_following_users) . " {$u_id}'s $user_type user--------\n";
+		// 		User::addFollowList($tmp_following_users);
+		// 		echo "--------add " . count($tmp_following_users) . " {$u_id}'s $user_type user done--------\n";
+		// 	}
+		// 	echo "--------request more $count user done with u_id $u_id--------\n";
 		}
 		else
 		{

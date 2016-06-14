@@ -31,6 +31,7 @@ while (1)
 {
 	echo "--------begin get user info--------\n";
 	$total = $redis->llen('request_queue');
+	$total = count($redis->lrange('request_queue',0,-1));
 	if ($total == 0)
 	{
 		echo "--------done--------\n";
@@ -85,6 +86,7 @@ while (1)
 					updateUserInfo($tmp_u_id);
 					echo "--------start getting {$tmp_u_id}'s " . $user_info['followers_count'] . " followers user list--------\n";
 					$follower_users = getUserList($tmp_u_id, 'followers', $user_info['followers_count'], 1);
+					
 					$tmp_redis->set($tmp_u_id, 'follower_users', count($follower_users));
 					if (!empty($follower_users))
 					{
